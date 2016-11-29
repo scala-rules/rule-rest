@@ -1,0 +1,18 @@
+# Routes for REST/JSON calls to run the derivations
+
+POST /api/run/group/all                                                     controllers.RestController.runAll
+
+# Routes for retrieving glossary/fact information
+
+GET /api/glossaries                                                         controllers.GlossariesController.list
+GET /api/glossaries/mergedGlossaries                                        controllers.GlossariesController.mergedGlossaries
+GET /api/glossaries/:id                                                     controllers.GlossariesController.byId(id)
+
+# Routes for retrieving jar version info
+
+GET /api/meta/jars                                                          controllers.JarsController.listConfiguration
+
+# Routes for static parts of the application
+
+GET /                                                                       controllers.Assets.at(path = "/public", file = "index.html")
+GET /favicon.ico                                                            controllers.Assets.at(path = "/public", file = "favicon.ico")
