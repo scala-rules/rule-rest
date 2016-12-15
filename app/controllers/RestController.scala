@@ -4,7 +4,8 @@ import javax.inject.Inject
 
 import controllers.conversion._
 import controllers.conversion.Converter._
-import org.scalarules.engine.{Context, Fact}
+import org.scalarules.engine.Context
+import org.scalarules.facts.Fact
 import play.api.libs.json.{JsError, JsObject, JsSuccess, JsValue}
 import play.api.mvc.{Action, Controller, Request}
 import services.{DerivationsService, GlossariesService, JsonConversionMapsService}

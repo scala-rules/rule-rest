@@ -2,7 +2,7 @@ package controllers
 
 import javax.inject._
 
-import org.scalarules.engine.Fact
+import org.scalarules.facts.Fact
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.mvc._

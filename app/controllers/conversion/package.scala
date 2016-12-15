@@ -1,6 +1,6 @@
 package controllers
 
-import org.scalarules.engine.Fact
+import org.scalarules.facts.Fact
 import play.api.libs.json.{JsObject, JsResult, JsValue}
 
 package object conversion {

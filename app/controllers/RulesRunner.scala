@@ -1,5 +1,6 @@
 package controllers
 
+import org.scalarules.derivations.Derivation
 import org.scalarules.engine._
 
 object RulesRunner {
