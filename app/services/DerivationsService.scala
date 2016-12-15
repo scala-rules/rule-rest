@@ -2,8 +2,7 @@ package services
 
 import javax.inject.{Inject, Singleton}
 
-import org.scalarules.dsl.nl.grammar.Berekening
-import org.scalarules.engine.Derivation
+import org.scalarules.derivations.Derivation
 import play.api.Configuration
 
 @Singleton

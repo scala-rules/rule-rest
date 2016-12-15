@@ -3,6 +3,7 @@ package controllers.conversion
 import controllers.conversion.ImplicitConversions.contextReads._
 import controllers.conversion.ImplicitConversions.contextWrites._
 import org.scalarules.engine._
+import org.scalarules.facts.Fact
 import play.api.data.validation.ValidationError
 import play.api.libs.json._
 
