@@ -3,7 +3,8 @@ package controllers
 import javax.inject.Inject
 
 import controllers.conversion.{Converter, JsonConversionsProvider}
-import org.scalarules.engine.{Context, Fact}
+import org.scalarules.engine.Context
+import org.scalarules.facts.Fact
 import play.api.libs.json.{JsError, JsSuccess}
 import play.api.mvc.{Action, Controller}
 import services.{DerivationsService, GlossariesService, JsonConversionMapsService}

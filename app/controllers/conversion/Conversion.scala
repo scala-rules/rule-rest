@@ -1,7 +1,7 @@
 package controllers.conversion
 
 import controllers.conversion.ImplicitConversions._
-import org.scalarules.engine.Fact
+import org.scalarules.facts.Fact
 import org.scalarules.finance.nl._
 import play.api.data.validation.ValidationError
 import play.api.libs.json._

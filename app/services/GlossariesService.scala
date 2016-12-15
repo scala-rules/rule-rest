@@ -2,7 +2,7 @@ package services
 
 import javax.inject.{Inject, Singleton}
 
-import org.scalarules.engine.Fact
+import org.scalarules.facts.Fact
 import org.scalarules.utils.Glossary
 import play.api.Configuration
 
