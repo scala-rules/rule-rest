@@ -19,7 +19,7 @@ object ImplicitConversions {
       * @param conversionMap
       * @return a Json Object containing all existing facts and their corresponding values
       */
-    def writes(context: Context, conversionMap: JsonConversionsProvider): JsValue = {
+    def writes(context: Context, conversionMap: JsonConversionsProvider): JsObject = {
       context.map{ case (fact:Fact[Any], factValue: Any) =>
         conversionMap.contextToJsonConversions.get(factValue.getClass) match {
           case function: Some[ConvertBackFunc] => function.get(fact, factValue)
