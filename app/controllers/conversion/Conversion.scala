@@ -6,6 +6,8 @@ import org.scalarules.finance.nl._
 import play.api.data.validation.ValidationError
 import play.api.libs.json._
 
+import scala.reflect.runtime.universe._
+
 trait JsonConversionsProvider {
   def contextToJsonConversions: Map[Class[_], (Fact[Any], Any) => JsObject]
   def jsonToFactConversions: Map[String, ConvertToFunc]
@@ -20,7 +22,9 @@ object DefaultJsonConversion extends JsonConversionsProvider {
       classOf[String] -> { contextStringToJsObject(_, _) },
       classOf[Bedrag] -> { contextBedragToJsObject(_, _) },
       classOf[Percentage] -> { contextPercentageToJsObject(_, _) },
-      classOf[BigDecimal] -> { contextBigDecimalToJsObject(_, _) }
+      classOf[BigDecimal] -> { contextBigDecimalToJsObject(_, _) },
+      classOf[Boolean] -> { contextBooleanToJsObject(_, _) },
+      classOf[java.lang.Boolean] -> { contextBooleanToJsObject(_, _) }
     )
 
     private def contextStringToJsObject(fact: Fact[Any], factValue: Any): JsObject = factValue match {
@@ -43,14 +47,24 @@ object DefaultJsonConversion extends JsonConversionsProvider {
       case _ => throw new IllegalArgumentException
     }
 
+    private def contextBooleanToJsObject(fact: Fact[Any], factValue: Any): JsObject = factValue match {
+      case bool: Boolean => JsObject(Map(fact.name -> JsBoolean(bool)))
+      case bool: java.lang.Boolean => JsObject(Map(fact.name -> JsBoolean(bool)))
+      case _ => throw new IllegalArgumentException
+    }
+
   }
 
   object JsonToFactConversionMap {
     val jsonToFactConversionMap: Map[String, ConvertToFunc] = Map[String, ConvertToFunc](
       classOf[String].getTypeName -> { stringFunct(_, _) },
+      weakTypeOf[String].toString -> { stringFunct(_, _) },
       classOf[Bedrag].getTypeName -> { bedragFunct(_, _) },
       classOf[Percentage].getTypeName -> { percentageFunct(_, _) },
-      classOf[BigDecimal].getTypeName -> { bigDecimalFunct(_, _) }
+      classOf[BigDecimal].getTypeName -> { bigDecimalFunct(_, _) },
+      weakTypeOf[BigDecimal].toString -> { bigDecimalFunct(_, _) },
+      classOf[Boolean].getTypeName -> { booleanFunct(_, _) },
+      weakTypeOf[Boolean].toString -> { booleanFunct(_, _) }
     )
 
     private def stringFunct(fact: Fact[Any], factValue: JsValue): JsResult[String] = factValue match {
@@ -71,6 +85,11 @@ object DefaultJsonConversion extends JsonConversionsProvider {
     private def percentageFunct(fact: Fact[Any], factValue: JsValue): JsResult[Percentage] = factValue match {
       case jsNumber: JsNumber => Json.fromJson[Percentage](jsNumber)
       case _ => JsError(ValidationError(s"Conversion for Percentage fact ${fact.name} failed, corresponding value was not of expected type JsNumber"))
+    }
+
+    private def booleanFunct(fact: Fact[Any], factValue: JsValue): JsResult[Boolean] = factValue match {
+      case jsBoolean: JsBoolean => JsSuccess(jsBoolean.value)
+      case _ => JsError(ValidationError(s"Conversion for String fact ${fact.name} failed, corresponding value was not of expected type JsBoolean"))
     }
 
   }

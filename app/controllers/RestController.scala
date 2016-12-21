@@ -69,7 +69,7 @@ class RestController @Inject() (derivationsService: DerivationsService, glossari
 
   private def processConvertedContext(initialContextFragments: List[JsSuccess[Context]], jsonResponse: ResponseJsObject): JsObject = {
     val initialContext: Context = initialContextFragments.foldLeft(Map.empty[Fact[Any], Any])((acc, jsSuccess) => acc ++ jsSuccess.get)
-    val resultContext: Context = RulesRunner.run(initialContext, derivationsService.derivations)
+    val resultContext: Context = RulesRunner.run(initialContext, derivationsService.topLevelDerivations)
 
     jsonResponse.toJson(initialContext = initialContext, resultContext = resultContext, jsonConversionMap)
   }
