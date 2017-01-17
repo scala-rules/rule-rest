@@ -4,15 +4,44 @@ import javax.inject.Inject
 
 import controllers.conversion._
 import controllers.conversion.Converter._
-import org.scalarules.engine.Context
+import org.scalarules.engine.{Context, FactEngine}
 import org.scalarules.facts.Fact
-import play.api.libs.json.{JsError, JsObject, JsSuccess, JsValue}
-import play.api.mvc.{Action, Controller, Request}
-import services.{DerivationsService, GlossariesService, JsonConversionMapsService}
+import org.scalarules.service.dsl.BusinessService
+import play.api.libs.json._
+import play.api.mvc.{Action, Controller, Request, Result}
+import services.{BusinessServicesService, DerivationsService, GlossariesService, JsonConversionMapsService}
+
+import scala.util.{Failure, Success, Try}
 
 // scalastyle:off public.methods.have.type
 
-class RestController @Inject() (derivationsService: DerivationsService, glossariesService: GlossariesService, jsonConversionMapsService: JsonConversionMapsService) extends Controller {
+class RestController @Inject() (businessServicesService: BusinessServicesService,
+                                derivationsService: DerivationsService,
+                                glossariesService: GlossariesService,
+                                jsonConversionMapsService: JsonConversionMapsService) extends Controller {
+
+  def runBusinessService(name: String) = Action(parse.json) {
+    request =>
+      findBusinessService(name) match {
+        case f: Failure[(String, BusinessService)] => BadRequest(Json.toJson(f.exception.getMessage))
+        case s: Success[(String, BusinessService)] => runBusiness(request, DebugResponseJsObject, s.value._2)
+      }
+  }
+
+  private def findBusinessService(name: String): Try[(String, BusinessService)] = {
+    val matchedBusinessServices = businessServicesService.businessServices.collect{ case (naam, service) if naam == name => (naam, service)}
+    matchedBusinessServices match {
+      case Nil => Failure(
+        new IllegalStateException("No BusinessService matched this name, make sure you have used the proper endpoint definition!" ++ businessServicesService.businessServiceNames.toString)
+      )
+      case head :: tail => tail match {
+        case Nil => Success(head)
+        case tail: List[(String, BusinessService)] => Failure(
+          new IllegalStateException("More than one BusinessService matched with this name. Suspected mistake in BusinessService specifications.")
+        )
+      }
+    }
+  }
 
   /**
     * Provides a REST endpoint for triggering all derivations in the target project. Any fact definitions available in the target project's glossaries
@@ -65,6 +94,15 @@ class RestController @Inject() (derivationsService: DerivationsService, glossari
     else Ok( processConvertedContext(initialContextFragments, jsonResponseProvider) )
   }
 
+  private def runBusiness(request: Request[JsValue], jsonResponseProvider: ResponseJsObject, businessService: BusinessService): Result = {
+    val (initialContextFragments: List[JsSuccess[Context]], conversionErrors: List[JsError]) = {
+      convertToIndividualContext(request.body, businessService.glossaries.foldLeft(Map.empty[String, Fact[Any]])((acc, glossary) => acc ++ glossary.facts), jsonConversionMap)
+    }
+
+    if (conversionErrors != List.empty) BadRequest( processConversionErrors(conversionErrors) )
+    else processConvertedContextBS(initialContextFragments, jsonResponseProvider, businessService)
+  }
+
   private def processConversionErrors(conversionErrors: List[JsError]): JsObject = JsError.toJson(conversionErrors.reduceLeft(_ ++ _))
 
   private def processConvertedContext(initialContextFragments: List[JsSuccess[Context]], jsonResponse: ResponseJsObject): JsObject = {
@@ -72,6 +110,23 @@ class RestController @Inject() (derivationsService: DerivationsService, glossari
     val resultContext: Context = RulesRunner.run(initialContext, derivationsService.topLevelDerivations)
 
     jsonResponse.toJson(initialContext = initialContext, resultContext = resultContext, jsonConversionMap)
+  }
+
+  private def processConvertedContextBS(initialContextFragments: List[JsSuccess[Context]], jsonResponse: ResponseJsObject, businessService: BusinessService): Result = {
+    val initialContext: Context = initialContextFragments.foldLeft(Map.empty[Fact[Any], Any])((acc, jsSuccess) => acc ++ jsSuccess.get)
+    val resultContext: Try[Context] = businessService.run(initialContext, FactEngine.runNormalDerivations)
+
+    resultContext match {
+      case f: Failure[Context] => BadRequest( Json.toJson("Attempt at calculation failed due to validation errors: " + f.exception.getMessage) )
+      case s: Success[Context] => Ok(
+        jsonResponse.toJson(
+          initialContext = initialContext,
+          resultContext = s.value.filter(x => businessService.uitvoerFacts.contains(x._1)),
+          jsonConversionMap
+        )
+      )
+    }
+
   }
 
 }

@@ -29,7 +29,7 @@ lazy val ruleRest = (project in file("."))
 
 // *** Dependencies ***
 
-lazy val scalaRulesVersion = "0.5.0"
+lazy val scalaRulesVersion = "0.5.1"
 lazy val scalaTestVersion = "3.0.0"
 lazy val jodaTimeVersion = "2.4"
 lazy val jodaConvertVersion = "1.8"

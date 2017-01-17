@@ -3,6 +3,7 @@
 POST /api/run/group/all                                                     controllers.RestController.runAll
 POST /api/run/group/all/debug                                               controllers.RestController.runAllDebug
 POST /api/run/group/all/resultsonly                                         controllers.RestController.runAllResultsOnly
+POST /api/run/group/:name                                                   controllers.RestController.runBusinessService(name)
 
 # Routes for retrieving glossary/fact information
 
