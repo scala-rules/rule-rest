@@ -7,6 +7,7 @@ import controllers.conversion.Converter._
 import org.scalarules.engine.{Context, FactEngine}
 import org.scalarules.facts.Fact
 import org.scalarules.service.dsl.BusinessService
+import play.api.data.validation.ValidationError
 import play.api.libs.json._
 import play.api.mvc.{Action, Controller, Request, Result}
 import services.{BusinessServicesService, DerivationsService, GlossariesService, JsonConversionMapsService}
@@ -23,7 +24,7 @@ class RestController @Inject() (businessServicesService: BusinessServicesService
   def runBusinessService(name: String) = Action(parse.json) {
     request =>
       findBusinessService(name) match {
-        case f: Failure[(String, BusinessService)] => BadRequest(Json.toJson(f.exception.getMessage))
+        case f: Failure[(String, BusinessService)] => BadRequest(JsError.toJson(JsError(ValidationError(f.exception.getMessage))))
         case s: Success[(String, BusinessService)] => runBusiness(request, DebugResponseJsObject, s.value._2)
       }
   }
@@ -117,7 +118,7 @@ class RestController @Inject() (businessServicesService: BusinessServicesService
     val resultContext: Try[Context] = businessService.run(initialContext, FactEngine.runNormalDerivations)
 
     resultContext match {
-      case f: Failure[Context] => BadRequest( Json.toJson("Attempt at calculation failed due to validation errors: " + f.exception.getMessage) )
+      case f: Failure[Context] => BadRequest( JsError.toJson(JsError(ValidationError("Attempt at calculation failed due to validation errors: " + f.exception.getMessage))) )
       case s: Success[Context] => Ok(
         jsonResponse.toJson(
           initialContext = initialContext,
