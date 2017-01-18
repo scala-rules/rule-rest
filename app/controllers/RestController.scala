@@ -21,6 +21,17 @@ class RestController @Inject() (businessServicesService: BusinessServicesService
                                 glossariesService: GlossariesService,
                                 jsonConversionMapsService: JsonConversionMapsService) extends Controller {
 
+  val endpoints: String = businessServicesService.businessServiceNames.map{
+    case businessService:String => "/api/run/group/" + businessService
+  } match {
+    case Nil => "No endpoints available: no BusinessServices have been defined!"
+    case list: List[String] => list.reduceLeft((acc, next) => acc + "\n" + next)
+  }
+
+  def businessservices = Action(
+    Ok(endpoints)
+  )
+
   def runBusinessService(name: String) = Action(parse.json) {
     request =>
       findBusinessService(name) match {
@@ -33,12 +44,12 @@ class RestController @Inject() (businessServicesService: BusinessServicesService
     val matchedBusinessServices = businessServicesService.businessServices.collect{ case (naam, service) if naam == name => (naam, service)}
     matchedBusinessServices match {
       case Nil => Failure(
-        new IllegalStateException("No BusinessService matched this name, make sure you have used the proper endpoint definition!" ++ businessServicesService.businessServiceNames.toString)
+        new IllegalArgumentException("No BusinessService matched this name, make sure you have used the proper endpoint definition!" ++ businessServicesService.businessServiceNames.toString)
       )
       case head :: tail => tail match {
         case Nil => Success(head)
         case tail: List[(String, BusinessService)] => Failure(
-          new IllegalStateException("More than one BusinessService matched with this name. Suspected mistake in BusinessService specifications.")
+          new IllegalStateException("More than one BusinessService matched this name. Suspected mistake in BusinessService specifications.")
         )
       }
     }
