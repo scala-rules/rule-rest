@@ -6,7 +6,7 @@ POST /api/run/group/resultsonly/all                                         cont
 POST /api/run/group/businessservices                                        controllers.RestController.businessservices
 POST /api/run/group/:name                                                   controllers.RestController.runBusinessService(name)
 POST /api/run/group/debug/:name                                             controllers.RestController.debugBusinessService(name)
-POST /api/run/group/resultsonly/:name                                       controllers.RestController.debugBusinessService(name)
+POST /api/run/group/resultsonly/:name                                       controllers.RestController.runBusinessServiceOutputsOnly(name)
 POST /api/run/group/information/:name                                       controllers.RestController.information(name)
 
 # Routes for retrieving glossary/fact information
