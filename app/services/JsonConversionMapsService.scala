@@ -4,6 +4,7 @@ import javax.inject.{Inject, Singleton}
 
 import controllers.conversion._
 import play.api.Configuration
+import play.api.libs.json.JsValue
 
 @Singleton
 class JsonConversionMapsService @Inject()(configuration: Configuration, jarLoaderService: JarLoaderService) {
@@ -17,9 +18,11 @@ class JsonConversionMapsService @Inject()(configuration: Configuration, jarLoade
       case (_, map: JsonConversionsProvider) => map.jsonToFactConversions
     }
 
-    override def contextToJsonConversions: Map[Class[_], ConvertBackFunc] = DefaultJsonConversion.contextToJsonConversions ++ jsonConversionMaps.flatMap{
-      case (_, map: JsonConversionsProvider) => map.contextToJsonConversions
-    }
+    override def userSpecifiedConversionsToJson(factValue: Any): JsValue =
+      if (jsonConversionMaps.isEmpty) { DefaultJsonConversion.userSpecifiedConversionsToJson(factValue) }
+      else if (jsonConversionMaps.size > 1) throw new IllegalStateException("Only a single instance of JsonConversionsProvider may be provided!")
+      else { jsonConversionMaps.toList.head._2.userSpecifiedConversionsToJson(factValue) }
+
   }
 
 }
