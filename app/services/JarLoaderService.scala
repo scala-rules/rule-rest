@@ -123,7 +123,7 @@ trait SpecializedClassLoader[T] {
   */
 class GlossaryClassLoader extends SpecializedClassLoader[Glossary] {
   // Note: since Glossaries are objects, we should only consider classes ending with a $, as per the Scala compiler's naming convention
-  override def precondition(className: String): Boolean = className.endsWith("$")
+  override def precondition(className: String): Boolean = className.endsWith("$") && className.collect { case ch: Char if ch == '$' => ch }.length == 1
 
   // Note: the dropRight(1) ensures the $-sign at the end of the name is removed. The Scala mirror will have no clue what to with the $ and simply requires the name of the object.
   override def preprocessClassName(className: String): String = className.dropRight(1)
@@ -164,7 +164,7 @@ class DerivationClassLoader extends SpecializedClassLoader[Berekening] {
   */
 class JsonConversionMapClassLoader extends SpecializedClassLoader[JsonConversionsProvider] {
   // Note: since JsonConversionMaps are objects, we should only consider classes ending with a $, as per the Scala compiler's naming convention
-  override def precondition(className: String): Boolean = className.endsWith("$")
+  override def precondition(className: String): Boolean = className.endsWith("$") && className.collect { case ch: Char if ch == '$' => ch }.length == 1
 
   // Note: the dropRight(1) ensures the $-sign at the end of the name is removed. The Scala mirror will have no clue what to with the $ and simply requires the name of the object.
   override def preprocessClassName(className: String): String = className.dropRight(1)
