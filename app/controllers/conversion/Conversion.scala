@@ -6,14 +6,21 @@ import org.scalarules.finance.nl._
 import play.api.data.validation.ValidationError
 import play.api.libs.json.{JsObject, _}
 
+import scala.reflect.{ClassTag, classTag}
 import scala.reflect.runtime.universe._
 
 trait JsonConversionsProvider {
   private def convertFacts(fact: Fact[Any], factValue: Any): JsObject = JsObject(Map(fact.name -> turnFactsIntoJson(factValue)))
 
+  private def matchMap[A : ClassTag, B: ClassTag](map: Map[A, B]) = map match {
+    case context: Map[Fact[Any] @unchecked, Any @unchecked] if classTag[A] == classTag[Fact[Any]] =>
+      context.map{ case (key, value) => convertFacts(key.asInstanceOf[Fact[Any]], value)}.reduceLeft(_ ++ _)
+  }
+
   private def turnFactsIntoJson(factValue: Any): JsValue = //scalastyle:ignore cyclomatic.complexity
     try { userSpecifiedConversionsToJson(factValue) }
     catch { case e: Exception => factValue match {
+      case map: Map[Any @unchecked, Any @unchecked] => matchMap(map)
       case x :: xs => JsArray(for { elem <- (x :: xs)} yield turnFactsIntoJson(elem))
       case bedrag: Bedrag => Json.toJson(bedrag)
       case string: String => Json.toJson(string)
