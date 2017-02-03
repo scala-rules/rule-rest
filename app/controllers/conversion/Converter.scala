@@ -34,5 +34,7 @@ object Converter {
     (successes, errors)
   }
 
-  def contextToJson(context: Context, jsonConversionMap: JsonConversionsProvider): JsObject = writes(context, jsonConversionMap)
+  def contextToJson(context: Context, jsonConversionMap: JsonConversionsProvider): JsObject =
+    if (context.isEmpty) JsObject(Map.empty[String, JsValue])
+    else writes(context, jsonConversionMap)
 }

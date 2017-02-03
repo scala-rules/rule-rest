@@ -3,7 +3,7 @@ package services
 import javax.inject.{Inject, Singleton}
 
 import org.scalarules.derivations.Derivation
-import org.scalarules.dsl.nl.grammar.{Berekening, ElementBerekening}
+import org.scalarules.dsl.nl.grammar.ElementBerekening
 import play.api.{Configuration, Logger}
 
 @Singleton

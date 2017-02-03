@@ -1,8 +1,13 @@
 # Routes for REST/JSON calls to run the derivations
 
 POST /api/run/group/all                                                     controllers.RestController.runAll
-POST /api/run/group/all/debug                                               controllers.RestController.runAllDebug
-POST /api/run/group/all/resultsonly                                         controllers.RestController.runAllResultsOnly
+POST /api/run/group/debug/all                                               controllers.RestController.runAllDebug
+POST /api/run/group/resultsonly/all                                         controllers.RestController.runAllResultsOnly
+POST /api/run/group/businessservices                                        controllers.RestController.businessservices
+POST /api/run/group/:name                                                   controllers.RestController.runBusinessService(name)
+POST /api/run/group/debug/:name                                             controllers.RestController.debugBusinessService(name)
+POST /api/run/group/resultsonly/:name                                       controllers.RestController.runBusinessServiceOutputsOnly(name)
+POST /api/run/group/information/:name                                       controllers.RestController.information(name)
 
 # Routes for retrieving glossary/fact information
 

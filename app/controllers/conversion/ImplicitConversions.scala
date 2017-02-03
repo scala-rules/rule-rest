@@ -22,11 +22,7 @@ object ImplicitConversions {
       */
     def writes(context: Context, conversionMap: JsonConversionsProvider): JsObject = {
       context.map{ case (fact:Fact[Any], factValue: Any) =>
-        conversionMap.contextToJsonConversions.get(factValue.getClass) match {
-          case function: Some[ConvertBackFunc] => function.get(fact, factValue)
-          case None => throw new IllegalStateException(s"Unable to find suitable toJson conversion for Fact with name ${fact.name} with " +
-                                                        s"valuetype ${factValue.getClass.getTypeName} in factConversionMap")
-        }
+        conversionMap.contextToJsonConversions(fact, factValue)
       }.reduceLeft(_ ++ _)
     }
   }

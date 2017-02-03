@@ -6,6 +6,7 @@ import javax.inject.{Inject, Singleton}
 
 import controllers.conversion.JsonConversionsProvider
 import org.scalarules.dsl.nl.grammar.Berekening
+import org.scalarules.service.dsl.BusinessService
 import org.scalarules.utils.Glossary
 import play.api.Configuration
 
@@ -49,12 +50,14 @@ class JarLoaderService @Inject() (configuration: Configuration) {
     val triedGlossaries: List[Try[Glossary]] = scanAndLoadClasses(jarClassEntries, new GlossaryClassLoader, cl, mirror)
     val triedDerivations: List[Try[Berekening]] = scanAndLoadClasses(jarClassEntries, new DerivationClassLoader, cl, mirror)
     val triedJsonConversionsProviders: List[Try[JsonConversionsProvider]] = scanAndLoadClasses(jarClassEntries, new JsonConversionMapClassLoader, cl, mirror)
+    val triedBusinessServices: List[Try[BusinessService]] = scanAndLoadClasses(jarClassEntries, new BusinessServiceClassLoader, cl, mirror)
 
     JarLoadingResults(
       jarName = location,
       glossaries = triedGlossaries.collect { case Success(glossary) => glossary },
       derivations = triedDerivations.collect { case Success(derivation) => derivation },
-      jsonConversionsProviders = triedJsonConversionsProviders.collect { case Success(jsonConversionsProvider) => jsonConversionsProvider }
+      jsonConversionsProviders = triedJsonConversionsProviders.collect { case Success(jsonConversionsProvider) => jsonConversionsProvider },
+      businessServices = triedBusinessServices.collect {case Success(businessService) => businessService }
     )
   })
 
@@ -74,7 +77,7 @@ object JarLoaderService {
   val CLASS_FILE_SUFFIX = ".class"
 }
 
-case class JarLoadingResults(jarName: String, glossaries: List[Glossary], derivations: List[Berekening], jsonConversionsProviders: List[JsonConversionsProvider])
+case class JarLoadingResults(jarName: String, glossaries: List[Glossary], derivations: List[Berekening], jsonConversionsProviders: List[JsonConversionsProvider], businessServices: List[BusinessService])
 
 /**
   * Implementations of this trait are used by the JarLoaderService to identify and load certain classes and objects from
@@ -120,7 +123,7 @@ trait SpecializedClassLoader[T] {
   */
 class GlossaryClassLoader extends SpecializedClassLoader[Glossary] {
   // Note: since Glossaries are objects, we should only consider classes ending with a $, as per the Scala compiler's naming convention
-  override def precondition(className: String): Boolean = className.endsWith("$")
+  override def precondition(className: String): Boolean = className.endsWith("$") && className.collect { case ch: Char if ch == '$' => ch }.length == 1
 
   // Note: the dropRight(1) ensures the $-sign at the end of the name is removed. The Scala mirror will have no clue what to with the $ and simply requires the name of the object.
   override def preprocessClassName(className: String): String = className.dropRight(1)
@@ -138,7 +141,7 @@ class GlossaryClassLoader extends SpecializedClassLoader[Glossary] {
   * Processes JAR-entries looking for classes extending Berekening, which we will instantiate.
   */
 class DerivationClassLoader extends SpecializedClassLoader[Berekening] {
-  // Note: since Berekeningen are classes, we should only consider classes NOT ending with a $, because those are objects.
+  // Note: since Berekeningen are classes, we should only consider classes NOT ending with a $, because those should be objects.
   override def precondition(className: String): Boolean = !className.endsWith("$")
 
   override def preprocessClassName(className: String): String = className
@@ -160,8 +163,8 @@ class DerivationClassLoader extends SpecializedClassLoader[Berekening] {
   * Processes JAR-entries looking for objects extending JsonConversionMap.
   */
 class JsonConversionMapClassLoader extends SpecializedClassLoader[JsonConversionsProvider] {
-  // Note: since Glossaries are objects, we should only consider classes ending with a $, as per the Scala compiler's naming convention
-  override def precondition(className: String): Boolean = className.endsWith("$")
+  // Note: since JsonConversionMaps are objects, we should only consider classes ending with a $, as per the Scala compiler's naming convention
+  override def precondition(className: String): Boolean = className.endsWith("$") && className.collect { case ch: Char if ch == '$' => ch }.length == 1
 
   // Note: the dropRight(1) ensures the $-sign at the end of the name is removed. The Scala mirror will have no clue what to with the $ and simply requires the name of the object.
   override def preprocessClassName(className: String): String = className.dropRight(1)
@@ -172,6 +175,26 @@ class JsonConversionMapClassLoader extends SpecializedClassLoader[JsonConversion
     val modMirror: ModuleMirror = mirror.reflectModule(jsonConversionsProviderModule)
 
     modMirror.instance.asInstanceOf[JsonConversionsProvider]
+  })
+}
+
+class BusinessServiceClassLoader extends SpecializedClassLoader[BusinessService] {
+  // Note: since BusinessServices are classes, we should only consider classes not ending with a $, as per the Scala compiler's naming convention those would be objects
+  override def precondition(className: String): Boolean = !className.endsWith("$")
+
+  override def preprocessClassName(className: String): String = className
+
+  override def load(className: String, mirror: _root_.scala.reflect.runtime.universe.Mirror): Try[BusinessService] = Try({
+
+    val businessServiceClass: ClassSymbol = mirror.staticClass(className)
+
+    val classMirror: ClassMirror = mirror.reflectClass(businessServiceClass)
+
+    val constructor: MethodSymbol = businessServiceClass.primaryConstructor.asMethod
+
+    val constructorMirror: MethodMirror = classMirror.reflectConstructor(constructor)
+
+    constructorMirror().asInstanceOf[BusinessService]
   })
 }
 
