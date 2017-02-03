@@ -96,16 +96,19 @@ object DefaultJsonConversion extends JsonConversionsProvider {
 
     private def bedragFunct(fact: Fact[Any], factValue: JsValue): JsResult[Bedrag] = factValue match {
       case jsNumber: JsNumber => Json.fromJson[Bedrag](jsNumber)
+      case jsString: JsString => Json.fromJson[Bedrag](jsString)
       case _ => JsError(ValidationError(s"Conversion for Bedrag fact ${fact.name} failed, corresponding value was not of expected type JsNumber"))
     }
 
     private def percentageFunct(fact: Fact[Any], factValue: JsValue): JsResult[Percentage] = factValue match {
       case jsNumber: JsNumber => Json.fromJson[Percentage](jsNumber)
+      case jsString: JsString => Json.fromJson[Percentage](jsString)
       case _ => JsError(ValidationError(s"Conversion for Percentage fact ${fact.name} failed, corresponding value was not of expected type JsNumber"))
     }
 
     private def booleanFunct(fact: Fact[Any], factValue: JsValue): JsResult[Boolean] = factValue match {
       case jsBoolean: JsBoolean => JsSuccess(jsBoolean.value)
+      case jsString: JsString => JsSuccess(jsString.value.toBoolean)
       case _ => JsError(ValidationError(s"Conversion for String fact ${fact.name} failed, corresponding value was not of expected type JsBoolean"))
     }
 
