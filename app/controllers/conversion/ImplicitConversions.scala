@@ -7,6 +7,7 @@ import play.api.data.validation.ValidationError
 import play.api.libs.json._
 
 import scala.annotation.tailrec
+import scala.util.Try
 
 object ImplicitConversions {
 
@@ -59,6 +60,7 @@ object ImplicitConversions {
   implicit object bedragReads extends Reads[Bedrag] {
     def reads(jsValue: JsValue): JsResult[Bedrag] = jsValue match {
       case jsNumber: JsNumber => JsSuccess(jsNumber.value.euro)
+      case jsString: JsString => Try(JsSuccess(jsString.value.euro)).getOrElse(JsError(ValidationError(s"Unable to convert value '${jsString.value}' to Bedrag, is it numeric?")))
       case other: Any => JsError(ValidationError("error.invalid.bedrag", other))
     }
   }
@@ -72,6 +74,7 @@ object ImplicitConversions {
   implicit object percentageReads extends Reads[Percentage] {
     def reads(jsValue: JsValue): JsResult[Percentage] = jsValue match {
       case jsNumber: JsNumber => JsSuccess(jsNumber.value.procent)
+      case jsString: JsString => Try(JsSuccess(jsString.value.procent)).getOrElse(JsError(ValidationError(s"Unable to convert value '${jsString.value}' to Percentage, is it numeric?")))
       case other: Any => JsError(ValidationError("error.invalid.percentage", other))
     }
   }

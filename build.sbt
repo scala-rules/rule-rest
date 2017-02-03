@@ -40,7 +40,8 @@ lazy val dependencies = Seq(
   "org.joda" % "joda-convert" % jodaConvertVersion,
   "org.scalatest" %% "scalatest" % scalaTestVersion % Test,
   "org.scalacheck" %% "scalacheck" % "1.12.5" % Test,
-  "com.storm-enroute" %% "scalameter" % "0.7" % Test
+  "com.storm-enroute" %% "scalameter" % "0.7" % Test,
+  filters
 )
 
 // *** Static analysis ***
